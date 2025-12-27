@@ -1,0 +1,8 @@
+{
+  "name": "Hankki (한끼)",
+  "description": "AI-powered diet diary and meal management platform for families and couples.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
