@@ -28,91 +28,96 @@ interface AIAnalysisResult extends NutritionInfo {
 }
 
 export const analyzeFoodImage = async (base64Image: string, location?: { latitude: number; longitude: number }): Promise<AIAnalysisResult> => {
-  // Always use the named parameter for API Key initialization
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-  const isLocationEnabled = !!location;
-
-  // Maps grounding is only supported in Gemini 2.5 series models.
-  const tools = isLocationEnabled ? [{ googleMaps: {} }] : [];
-  const toolConfig = isLocationEnabled ? {
-    retrievalConfig: {
-      latLng: {
-        latitude: location!.latitude,
-        longitude: location!.longitude
-      }
-    }
-  } : undefined;
-
-  let prompt = `
-    Analyze this food image. 
-    Identify the main dish or dishes.
-    Estimate the total calories and macronutrients (carbohydrates, protein, fat) for the entire serving shown.
-    Break down the main ingredients and provide nutritional insights for each.
-    
-    ${isLocationEnabled ? "Using the provided location data, identify if this is a restaurant or home. If it is a restaurant, try to identify the specific restaurant name." : ""}
-
-    IMPORTANT: Return the response in Korean (Hangul).
-    
-    Fields:
-    - foodName: Simple name of the dish.
-    - description: A short, neutral description.
-    - ingredientDetails: A list of main ingredients found in the dish. For each:
-       - name: Name of the ingredient.
-       - nutritionEstimate: Estimated calories or key content (e.g., "약 50kcal", "단백질 10g").
-       - benefit: A brief health benefit (e.g., "비타민 C 풍부", "소화에 도움").
-    - aiTip: Warm, helpful nutritional advice (max 2 sentences).
-    - calories, carbs, protein, fat: Total numeric values for the meal.
-    ${isLocationEnabled ? "- locationName: The name of the restaurant if identified, or '집밥' if it seems like home cooked, or a general place name.\n- locationType: One of 'restaurant', 'home', 'other'." : ""}
-
-    If not food, return 0/empty values and "음식 아님".
-  `;
-
-  // Maps grounding tool requires conditional config handling
-  if (isLocationEnabled) {
-    prompt += `\n\nOutput the result as a valid JSON object. Do not use Markdown code blocks.`;
-  }
-
-  const schema = {
-    type: Type.OBJECT,
-    properties: {
-      foodName: { type: Type.STRING },
-      calories: { type: Type.NUMBER },
-      carbs: { type: Type.NUMBER },
-      protein: { type: Type.NUMBER },
-      fat: { type: Type.NUMBER },
-      description: { type: Type.STRING },
-      ingredientDetails: {
-        type: Type.ARRAY,
-        items: {
-          type: Type.OBJECT,
-          properties: {
-            name: { type: Type.STRING },
-            nutritionEstimate: { type: Type.STRING },
-            benefit: { type: Type.STRING }
-          },
-          required: ["name", "nutritionEstimate", "benefit"]
-        }
-      },
-      aiTip: { type: Type.STRING },
-      locationName: { type: Type.STRING },
-      locationType: { type: Type.STRING, enum: ["home", "restaurant", "other"] }
-    },
-    required: ["foodName", "calories", "carbs", "protein", "fat", "description", "ingredientDetails", "aiTip"]
-  };
-
-  const requestConfig: any = {
-    tools: tools,
-    toolConfig: toolConfig,
-  };
-
-  // Only use JSON mode if NOT using Maps tool (Maps tool + JSON mode is unsupported)
-  if (!isLocationEnabled) {
-    requestConfig.responseMimeType = "application/json";
-    requestConfig.responseSchema = schema;
-  }
-
   try {
+    // Always use the named parameter for API Key initialization
+    const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("API Key가 설정되지 않았습니다. .env 파일을 확인해주세요.");
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+
+    const isLocationEnabled = !!location;
+
+    // Maps grounding is only supported in Gemini 2.5 series models.
+    const tools = isLocationEnabled ? [{ googleMaps: {} }] : [];
+    const toolConfig = isLocationEnabled ? {
+      retrievalConfig: {
+        latLng: {
+          latitude: location!.latitude,
+          longitude: location!.longitude
+        }
+      }
+    } : undefined;
+
+    let prompt = `
+      Analyze this food image. 
+      Identify the main dish or dishes.
+      Estimate the total calories and macronutrients (carbohydrates, protein, fat) for the entire serving shown.
+      Break down the main ingredients and provide nutritional insights for each.
+      
+      ${isLocationEnabled ? "Using the provided location data, identify if this is a restaurant or home. If it is a restaurant, try to identify the specific restaurant name." : ""}
+
+      IMPORTANT: Return the response in Korean (Hangul).
+      
+      Fields:
+      - foodName: Simple name of the dish.
+      - description: A short, neutral description.
+      - ingredientDetails: A list of main ingredients found in the dish. For each:
+         - name: Name of the ingredient.
+         - nutritionEstimate: Estimated calories or key content (e.g., "약 50kcal", "단백질 10g").
+         - benefit: A brief health benefit (e.g., "비타민 C 풍부", "소화에 도움").
+      - aiTip: Warm, helpful nutritional advice (max 2 sentences).
+      - calories, carbs, protein, fat: Total numeric values for the meal.
+      ${isLocationEnabled ? "- locationName: The name of the restaurant if identified, or '집밥' if it seems like home cooked, or a general place name.\n- locationType: One of 'restaurant', 'home', 'other'." : ""}
+
+      If not food, return 0/empty values and "음식 아님".
+    `;
+
+    // Maps grounding tool requires conditional config handling
+    if (isLocationEnabled) {
+      prompt += `\n\nOutput the result as a valid JSON object. Do not use Markdown code blocks.`;
+    }
+
+    const schema = {
+      type: Type.OBJECT,
+      properties: {
+        foodName: { type: Type.STRING },
+        calories: { type: Type.NUMBER },
+        carbs: { type: Type.NUMBER },
+        protein: { type: Type.NUMBER },
+        fat: { type: Type.NUMBER },
+        description: { type: Type.STRING },
+        ingredientDetails: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              name: { type: Type.STRING },
+              nutritionEstimate: { type: Type.STRING },
+              benefit: { type: Type.STRING }
+            },
+            required: ["name", "nutritionEstimate", "benefit"]
+          }
+        },
+        aiTip: { type: Type.STRING },
+        locationName: { type: Type.STRING },
+        locationType: { type: Type.STRING, enum: ["home", "restaurant", "other"] }
+      },
+      required: ["foodName", "calories", "carbs", "protein", "fat", "description", "ingredientDetails", "aiTip"]
+    };
+
+    const requestConfig: any = {
+      tools: tools,
+      toolConfig: toolConfig,
+    };
+
+    // Only use JSON mode if NOT using Maps tool (Maps tool + JSON mode is unsupported)
+    if (!isLocationEnabled) {
+      requestConfig.responseMimeType = "application/json";
+      requestConfig.responseSchema = schema;
+    }
+
     // Model selection based on feature availability: Maps grounding requires 2.5 series.
     const response = await ai.models.generateContent({
       model: 'gemini-1.5-flash',
@@ -130,9 +135,15 @@ export const analyzeFoodImage = async (base64Image: string, location?: { latitud
       config: requestConfig
     });
 
-    // Access text property directly from the response object
-    let jsonText = response.text;
-    if (!jsonText) throw new Error("No response from AI");
+    // Access text property/method safely
+    let jsonText = "";
+    if (typeof (response as any).text === 'function') {
+      jsonText = await (response as any).text();
+    } else {
+      jsonText = response.text || "";
+    }
+
+    if (!jsonText) throw new Error("AI로부터 응답 텍스트를 받지 못했습니다.");
 
     // Clean up markdown code blocks if present
     jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -147,18 +158,18 @@ export const analyzeFoodImage = async (base64Image: string, location?: { latitud
       ingredients
     } as AIAnalysisResult;
 
-  } catch (error) {
-    console.error("Gemini Analysis Failed:", error);
+  } catch (error: any) {
+    console.error("Gemini Analysis Failed Detailed Error:", error);
     return {
       foodName: "분석 실패",
       calories: 0,
       carbs: 0,
       protein: 0,
       fat: 0,
-      description: "음식을 인식할 수 없습니다. 다시 시도해주세요.",
+      description: `분석 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`,
       ingredients: [],
       ingredientDetails: [],
-      aiTip: "음식을 분석할 수 없어서 꿀팁을 제공할 수 없어요."
+      aiTip: "콘솔 로그를 확인하거나 API 키 설정을 점검해주세요."
     };
   }
 };
