@@ -27,16 +27,21 @@ interface AIAnalysisResult extends NutritionInfo {
   locationType?: 'home' | 'restaurant' | 'other';
 }
 
+const getAiInstance = () => {
+  const apiKey =
+    process.env.API_KEY ||
+    process.env.GEMINI_API_KEY ||
+    (import.meta as any).env?.VITE_GEMINI_API_KEY;
+
+  if (!apiKey || apiKey === "undefined" || apiKey === '""') {
+    throw new Error("정상적인 API Key를 찾을 수 없습니다. .env.local 파일에 VITE_GEMINI_API_KEY=your_key_here 형식을 입력했는지 확인해주세요.");
+  }
+  return new GoogleGenAI({ apiKey });
+};
+
 export const analyzeFoodImage = async (base64Image: string, location?: { latitude: number; longitude: number }): Promise<AIAnalysisResult> => {
   try {
-    // Always use the named parameter for API Key initialization
-    const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("API Key가 설정되지 않았습니다. .env 파일을 확인해주세요.");
-    }
-
-    const ai = new GoogleGenAI({ apiKey });
-
+    const ai = getAiInstance();
     const isLocationEnabled = !!location;
 
     // Maps grounding is only supported in Gemini 2.5 series models.
@@ -108,8 +113,7 @@ export const analyzeFoodImage = async (base64Image: string, location?: { latitud
     };
 
     const requestConfig: any = {
-      tools: tools,
-      toolConfig: toolConfig,
+      // JSON mode is set here
     };
 
     // Only use JSON mode if NOT using Maps tool (Maps tool + JSON mode is unsupported)
@@ -118,30 +122,30 @@ export const analyzeFoodImage = async (base64Image: string, location?: { latitud
       requestConfig.responseSchema = schema;
     }
 
-    // Model selection based on feature availability: Maps grounding requires 2.5 series.
+    // Unified SDK (1.x) 규격에 맞게 호출 (속성들의 위치가 중요함)
     const response = await ai.models.generateContent({
       model: 'gemini-1.5-flash',
-      contents: {
-        parts: [
-          {
-            inlineData: {
-              mimeType: "image/jpeg",
-              data: base64Image
-            }
-          },
-          { text: prompt }
-        ]
-      },
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              inlineData: {
+                mimeType: "image/jpeg",
+                data: base64Image
+              }
+            },
+            { text: prompt }
+          ]
+        }
+      ],
+      tools: tools as any,
+      systemInstruction: "You are a professional nutritionist. Always respond in Korean.",
       config: requestConfig
-    });
+    } as any);
 
-    // Access text property/method safely
-    let jsonText = "";
-    if (typeof (response as any).text === 'function') {
-      jsonText = await (response as any).text();
-    } else {
-      jsonText = response.text || "";
-    }
+    // Access text property/method safely (Unified SDK uses .text)
+    let jsonText = response.text || "";
 
     if (!jsonText) throw new Error("AI로부터 응답 텍스트를 받지 못했습니다.");
 
@@ -175,8 +179,7 @@ export const analyzeFoodImage = async (base64Image: string, location?: { latitud
 };
 
 export const recalculateNutrition = async (base64Image: string, ingredients: string[]): Promise<NutritionInfo> => {
-  // Always use the named parameter for API Key initialization
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = getAiInstance();
 
   const prompt = `
     Analyze this food image again, focusing specifically on these ingredients provided by the user: ${ingredients.join(', ')}.
@@ -201,25 +204,27 @@ export const recalculateNutrition = async (base64Image: string, ingredients: str
     // Using gemini-3-flash-preview for specialized multimodal analysis tasks
     const response = await ai.models.generateContent({
       model: 'gemini-1.5-flash',
-      contents: {
-        parts: [
-          {
-            inlineData: {
-              mimeType: "image/jpeg",
-              data: base64Image
-            }
-          },
-          { text: prompt }
-        ]
-      },
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              inlineData: {
+                mimeType: "image/jpeg",
+                data: base64Image
+              }
+            },
+            { text: prompt }
+          ]
+        }
+      ],
       config: {
         responseMimeType: "application/json",
-        responseSchema: schema
+        responseSchema: schema as any
       }
     });
 
-    // Access text property directly from the response object
-    let jsonText = response.text;
+    let jsonText = response.text || "";
     if (!jsonText) throw new Error("No response from AI");
 
     jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
