@@ -28,13 +28,21 @@ interface AIAnalysisResult extends NutritionInfo {
 }
 
 const getAiClient = () => {
-  const apiKey =
-    process.env.API_KEY ||
-    process.env.GEMINI_API_KEY ||
-    (import.meta as any).env?.VITE_GEMINI_API_KEY;
+  let apiKey: string | undefined;
+
+  // 1. Try Vite environment variable (most likely for this project)
+  // Note: parsing import.meta as any to avoid type issues if types aren't fully set up
+  if ((import.meta as any).env?.VITE_GEMINI_API_KEY) {
+    apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
+  }
+
+  // 2. Fallback: Check process.env safely (for Node.js or compatible environments)
+  if (!apiKey && typeof process !== 'undefined' && process.env) {
+    apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+  }
 
   if (!apiKey || apiKey === "undefined" || apiKey === '""') {
-    throw new Error("정상적인 API Key를 찾을 수 없습니다. .env.local 파일에 VITE_GEMINI_API_KEY=your_key_here 형식을 입력했는지 확인해주세요.");
+    throw new Error("정상적인 API Key를 찾을 수 없습니다. .env.local 파일에 VITE_GEMINI_API_KEY=your_key_here 형식을 입력했는지 확인해주세요. (참고: 배포 환경에서는 환경 변수가 빌드 시점에 설정되어야 할 수 있습니다.)");
   }
 
   return new GoogleGenAI({ apiKey });
