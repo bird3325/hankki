@@ -1,6 +1,6 @@
 
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
-import { NutritionInfo, DetailedIngredient, LocationInfo } from "../types";
+import { GoogleGenAI } from "@google/genai";
+import { NutritionInfo, DetailedIngredient } from "../types";
 
 // Helper to convert file to base64
 export const fileToGenerativePart = async (file: File): Promise<string> => {
@@ -27,7 +27,7 @@ interface AIAnalysisResult extends NutritionInfo {
   locationType?: 'home' | 'restaurant' | 'other';
 }
 
-const getAiInstance = () => {
+const getAiClient = () => {
   const apiKey =
     process.env.API_KEY ||
     process.env.GEMINI_API_KEY ||
@@ -37,19 +37,12 @@ const getAiInstance = () => {
     throw new Error("정상적인 API Key를 찾을 수 없습니다. .env.local 파일에 VITE_GEMINI_API_KEY=your_key_here 형식을 입력했는지 확인해주세요.");
   }
 
-  // API 버전을 v1으로 명시적으로 고정하여 v1beta 404 오류 해결 시도
-  return new GoogleGenerativeAI(apiKey);
+  return new GoogleGenAI({ apiKey });
 };
 
 export const analyzeFoodImage = async (base64Image: string, location?: { latitude: number; longitude: number }): Promise<AIAnalysisResult> => {
   try {
-    const genAI = getAiInstance();
-    // 가장 표준적인 모델 명칭 사용 (models/ 접두어 없이 시도)
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      systemInstruction: "You are a professional nutritionist. Analyze food images and provide detailed nutritional information. Always respond in Korean (Hangul).",
-    });
-
+    const ai = getAiClient();
     const isLocationEnabled = !!location;
 
     const prompt = `
@@ -70,63 +63,71 @@ export const analyzeFoodImage = async (base64Image: string, location?: { latitud
     `;
 
     const schema = {
-      type: SchemaType.OBJECT,
+      type: 'OBJECT',
       properties: {
-        foodName: { type: SchemaType.STRING },
-        calories: { type: SchemaType.NUMBER },
-        carbs: { type: SchemaType.NUMBER },
-        protein: { type: SchemaType.NUMBER },
-        fat: { type: SchemaType.NUMBER },
-        description: { type: SchemaType.STRING },
+        foodName: { type: 'STRING' },
+        calories: { type: 'NUMBER' },
+        carbs: { type: 'NUMBER' },
+        protein: { type: 'NUMBER' },
+        fat: { type: 'NUMBER' },
+        description: { type: 'STRING' },
         ingredientDetails: {
-          type: SchemaType.ARRAY,
+          type: 'ARRAY',
           items: {
-            type: SchemaType.OBJECT,
+            type: 'OBJECT',
             properties: {
-              name: { type: SchemaType.STRING },
-              nutritionEstimate: { type: SchemaType.STRING },
-              benefit: { type: SchemaType.STRING }
+              name: { type: 'STRING' },
+              nutritionEstimate: { type: 'STRING' },
+              benefit: { type: 'STRING' }
             },
             required: ["name", "nutritionEstimate", "benefit"]
           }
         },
-        aiTip: { type: SchemaType.STRING },
-        locationName: { type: SchemaType.STRING },
-        locationType: { type: SchemaType.STRING }
+        aiTip: { type: 'STRING' },
+        locationName: { type: 'STRING' },
+        locationType: { type: 'STRING' }
       },
       required: ["foodName", "calories", "carbs", "protein", "fat", "description", "ingredientDetails", "aiTip"]
     };
 
-    const generationConfig = {
-      responseMimeType: "application/json",
-      responseSchema: schema as any,
-    };
 
-    const result = await model.generateContent({
-      contents: [{
-        role: "user",
-        parts: [
-          {
-            inlineData: {
-              mimeType: "image/jpeg",
-              data: base64Image
-            }
-          },
-          { text: prompt }
-        ]
-      }],
-      generationConfig,
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              inlineData: {
+                mimeType: "image/jpeg",
+                data: base64Image
+              }
+            },
+            { text: prompt }
+          ]
+        }
+      ],
+      config: {
+        systemInstruction: "You are a professional nutritionist. Analyze food images and provide detailed nutritional information. Always respond in Korean (Hangul).",
+        responseMimeType: "application/json",
+        responseSchema: schema as any,
+      }
     });
 
-    const response = await result.response;
-    let jsonText = response.text();
+    console.log("Gemini Response:", response); // Debug log
 
-    if (!jsonText) throw new Error("AI로부터 응답 텍스트를 받지 못했습니다.");
+    // Handle response structure depending on SDK version
+    const candidates = response.candidates;
+    if (!candidates || !candidates.length) {
+      throw new Error("AI로부터 응답(candidates)을 받지 못했습니다.");
+    }
 
-    // Clean up markdown code blocks if present (though responseMimeType should handle it)
-    jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
+    const textPart = candidates[0].content?.parts?.[0]?.text;
+    if (!textPart) {
+      throw new Error("AI 응답에서 텍스트를 추출할 수 없습니다.");
+    }
 
-    const data = JSON.parse(jsonText);
+    const data = JSON.parse(textPart);
     const ingredients = data.ingredientDetails?.map((d: any) => d.name) || [];
 
     return {
@@ -137,10 +138,9 @@ export const analyzeFoodImage = async (base64Image: string, location?: { latitud
   } catch (error: any) {
     console.error("Gemini Analysis Failed Detailed Error:", error);
 
-    // Check for specific NOT_FOUND error to provide better guidance
     let errorMessage = error.message || '알 수 없는 오류';
     if (errorMessage.includes("404") || errorMessage.includes("not found")) {
-      errorMessage = "모델(gemini-1.5-flash)을 찾을 수 없습니다. (404 오류)";
+      errorMessage = "모델(gemini-2.0-flash)을 찾을 수 없습니다. (404 오류)";
     }
 
     return {
@@ -152,15 +152,14 @@ export const analyzeFoodImage = async (base64Image: string, location?: { latitud
       description: `분석 중 오류가 발생했습니다: ${errorMessage}`,
       ingredients: [],
       ingredientDetails: [],
-      aiTip: "해결 가이드: 1. AI Studio(aistudio.google.com)에서 'Gemini 1.5 Flash' 모델이 활성화된 새 키를 발급받아 보세요. 2. .env.local 파일의 VITE_GEMINI_API_KEY 값을 새 키로 교체하고 서버를 재시작해 주세요."
+      aiTip: "해결 가이드: 1. AI Studio(aistudio.google.com)에서 API 키를 확인해주세요. 2. .env.local 파일의 VITE_GEMINI_API_KEY 값을 확인하고 서버를 재시작해 주세요."
     };
   }
 };
 
 export const recalculateNutrition = async (base64Image: string, ingredients: string[]): Promise<NutritionInfo> => {
   try {
-    const genAI = getAiInstance();
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const ai = getAiClient();
 
     const prompt = `
       Analyze this food image again, focusing specifically on these ingredients provided by the user: ${ingredients.join(', ')}.
@@ -169,38 +168,51 @@ export const recalculateNutrition = async (base64Image: string, ingredients: str
     `;
 
     const schema = {
-      type: SchemaType.OBJECT,
+      type: 'OBJECT',
       properties: {
-        calories: { type: SchemaType.NUMBER },
-        carbs: { type: SchemaType.NUMBER },
-        protein: { type: SchemaType.NUMBER },
-        fat: { type: SchemaType.NUMBER },
+        calories: { type: 'NUMBER' },
+        carbs: { type: 'NUMBER' },
+        protein: { type: 'NUMBER' },
+        fat: { type: 'NUMBER' },
       },
       required: ["calories", "carbs", "protein", "fat"]
     };
 
-    const result = await model.generateContent({
-      contents: [{
-        role: "user",
-        parts: [
-          {
-            inlineData: {
-              mimeType: "image/jpeg",
-              data: base64Image
-            }
-          },
-          { text: prompt }
-        ]
-      }],
-      generationConfig: {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              inlineData: {
+                mimeType: "image/jpeg",
+                data: base64Image
+              }
+            },
+            { text: prompt }
+          ]
+        }
+      ],
+      config: {
         responseMimeType: "application/json",
         responseSchema: schema as any,
       },
     });
 
-    const response = await result.response;
-    const jsonText = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
-    const data = JSON.parse(jsonText);
+    console.log("Gemini Recalculate Response:", response); // Debug log
+
+    const candidates = response.candidates;
+    if (!candidates || !candidates.length) {
+      throw new Error("AI로부터 응답(candidates)을 받지 못했습니다.");
+    }
+
+    const textPart = candidates[0].content?.parts?.[0]?.text;
+    if (!textPart) {
+      throw new Error("AI 응답에서 텍스트를 추출할 수 없습니다.");
+    }
+
+    const data = JSON.parse(textPart);
 
     return {
       calories: data.calories || 0,
