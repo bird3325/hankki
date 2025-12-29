@@ -4,6 +4,7 @@ declare global {
             postMessage: (message: string) => void;
         };
         receiveImageFromApp?: (base64Image: string) => void;
+        receiveLocationFromApp?: (locationData: any) => void;
     }
 }
 
@@ -88,24 +89,64 @@ const MealEntry: React.FC<MealEntryProps> = ({
 
     const getCurrentLocation = (): Promise<{ latitude: number; longitude: number } | undefined> => {
         return new Promise((resolve) => {
-            if (!navigator.geolocation) {
-                resolve(undefined);
+            // 1. Try Native App Location via Message (Priority)
+            if (window.ReactNativeWebView) {
+                console.log("Requesting location from Native App...");
+
+                // Create a temporary handler for the response
+                const handleLocationResponse = (locationData: any) => {
+                    console.log("Received location from Native App:", locationData);
+                    if (locationData && locationData.latitude && locationData.longitude) {
+                        resolve({
+                            latitude: locationData.latitude,
+                            longitude: locationData.longitude
+                        });
+                    } else {
+                        resolve(undefined);
+                    }
+                };
+
+                // Assign to global window object so the native app can call it
+                window.receiveLocationFromApp = handleLocationResponse;
+
+                // Send request message
+                window.ReactNativeWebView.postMessage('get_location');
+
+                // Fallback timeout in case app doesn't respond quickly
+                setTimeout(() => {
+                    if (window.receiveLocationFromApp === handleLocationResponse) {
+                        console.warn("Native app location request timed out, trying web geolocation...");
+                        // Clean up and fall through to web geolocation
+                        window.receiveLocationFromApp = undefined;
+                        tryWebGeolocation(resolve);
+                    }
+                }, 3000);
                 return;
             }
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    resolve({
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude
-                    });
-                },
-                (error) => {
-                    console.warn("Geolocation error:", error);
-                    resolve(undefined);
-                },
-                { timeout: 5000, enableHighAccuracy: false }
-            );
+
+            // 2. Web Geolocation (Fallback)
+            tryWebGeolocation(resolve);
         });
+    };
+
+    const tryWebGeolocation = (resolve: (loc: { latitude: number; longitude: number } | undefined) => void) => {
+        if (!navigator.geolocation) {
+            resolve(undefined);
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                resolve({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                });
+            },
+            (error) => {
+                console.warn("Geolocation error:", error);
+                resolve(undefined);
+            },
+            { timeout: 5000, enableHighAccuracy: false }
+        );
     };
 
     const handleImageAnalysis = React.useCallback(async (base64: string, type: string = 'image/jpeg') => {
@@ -129,7 +170,9 @@ const MealEntry: React.FC<MealEntryProps> = ({
             setImageFileBase64(finalBase64);
             setImagePreview(`data:${finalType};base64,${finalBase64}`);
 
+            // Fetch location properly before analysis
             const loc = await getCurrentLocation();
+            console.log("Location for analysis:", loc);
             setLocation(loc);
 
             const result = await analyzeFoodImage(finalBase64, loc);
