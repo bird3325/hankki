@@ -122,9 +122,10 @@ export const analyzeFoodImage = async (base64Image: string, location?: { latitud
       requestConfig.responseSchema = schema;
     }
 
-    // Unified SDK (1.x) 규격에 맞게 호출 (속성들의 위치가 중요함)
+    // Unified SDK (1.x) 규격에 맞게 호출
+    // 모델 이름을 'gemini-1.5-flash-latest'로 명확히 지정하여 404 해결 시도
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-1.5-flash-latest',
       contents: [
         {
           role: 'user',
@@ -139,7 +140,8 @@ export const analyzeFoodImage = async (base64Image: string, location?: { latitud
           ]
         }
       ],
-      tools: tools as any,
+      // Maps grounding 도구가 404의 원인일 수 있어 일시적으로 주석 처리하여 테스트
+      // tools: tools as any,
       systemInstruction: "You are a professional nutritionist. Always respond in Korean.",
       config: requestConfig
     } as any);
@@ -203,7 +205,7 @@ export const recalculateNutrition = async (base64Image: string, ingredients: str
   try {
     // Using gemini-3-flash-preview for specialized multimodal analysis tasks
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-1.5-flash-latest',
       contents: [
         {
           role: 'user',
@@ -222,7 +224,7 @@ export const recalculateNutrition = async (base64Image: string, ingredients: str
         responseMimeType: "application/json",
         responseSchema: schema as any
       }
-    });
+    } as any);
 
     let jsonText = response.text || "";
     if (!jsonText) throw new Error("No response from AI");
