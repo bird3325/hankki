@@ -9,12 +9,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "lucide-react": "^0.561.0",
-    "recharts": "^3.6.0",
-    "react-dom": "^19.2.3",
     "@google/genai": "^1.33.0",
+    "@google/generative-ai": "^0.24.1",
+    "@supabase/supabase-js": "^2.88.0",
+    "dotenv": "^17.2.3",
+    "lucide-react": "^0.561.0",
     "react": "^19.2.3",
-    "@supabase/supabase-js": "^2.88.0"
+    "react-dom": "^19.2.3",
+    "recharts": "^3.6.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
