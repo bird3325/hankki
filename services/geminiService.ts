@@ -116,7 +116,7 @@ export const analyzeFoodImage = async (base64Image: string, location?: { latitud
         }
       ],
       config: {
-        systemInstruction: "You are a professional nutritionist. Analyze food images and provide detailed nutritional information. Always respond in Korean (Hangul).",
+        systemInstruction: "You are a professional nutritionist. Analyze food images and provide detailed nutritional information. Always respond in Korean (Hangul). For 'nutritionEstimate', provide a VERY SHORT tag (max 10 characters, e.g., '고단백', '비타민C', '저칼로리'). Put detailed info in 'benefit'.",
         responseMimeType: "application/json",
         responseSchema: schema as any,
       }
