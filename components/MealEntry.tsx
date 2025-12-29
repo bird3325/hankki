@@ -112,13 +112,27 @@ const MealEntry: React.FC<MealEntryProps> = ({
         try {
             setStep('analyzing');
             setError(null);
-            setImageFileBase64(base64);
-            setImagePreview(`data:${type};base64,${base64}`);
+
+            // 입력 데이터 정제: Data URL 형식이 포함되어 있는지 확인
+            let finalBase64 = base64;
+            let finalType = type;
+
+            if (base64.startsWith('data:')) {
+                const parts = base64.split(',');
+                if (parts.length > 1) {
+                    finalBase64 = parts[1];
+                    const mimeMatch = parts[0].match(/data:(.*?);/);
+                    if (mimeMatch) finalType = mimeMatch[1];
+                }
+            }
+
+            setImageFileBase64(finalBase64);
+            setImagePreview(`data:${finalType};base64,${finalBase64}`);
 
             const loc = await getCurrentLocation();
             setLocation(loc);
 
-            const result = await analyzeFoodImage(base64, loc);
+            const result = await analyzeFoodImage(finalBase64, loc);
             setAnalysisProgress(4);
             await new Promise(resolve => setTimeout(resolve, 500));
 
