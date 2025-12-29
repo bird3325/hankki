@@ -107,35 +107,70 @@ const MealEntry: React.FC<MealEntryProps> = ({
         });
     };
 
+    const handleImageAnalysis = async (base64: string, type: string = 'image/jpeg') => {
+        try {
+            setStep('analyzing');
+            setError(null);
+            setImageFileBase64(base64);
+            setImagePreview(`data:${type};base64,${base64}`);
+
+            const loc = await getCurrentLocation();
+            setLocation(loc);
+
+            const result = await analyzeFoodImage(base64, loc);
+            setAnalysisProgress(4);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            setAnalysisResult(result);
+            setEditName(result.foodName);
+            setEditCalories(result.calories);
+            setMemo('');
+            setEditIngredients(result.ingredients || []);
+            setEditLocationName(result.locationName || '');
+
+            setStep('review');
+        } catch (err) {
+            console.error("Analysis Error:", err);
+            setError('이미지를 분석하는 중 오류가 발생했습니다.');
+            setStep('capture');
+        }
+    };
+
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            try {
+                // event.data가 문자열일 수도 있고 객체일 수도 있으므로 확인
+                const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+
+                if (data && (data.type === 'image' || data.type === 'camera' || data.type === 'album')) {
+                    if (data.base64) {
+                        handleImageAnalysis(data.base64, data.mimeType || 'image/jpeg');
+                    }
+                }
+            } catch (e) {
+                // JSON 파싱 에러 등은 무시 (다른 메시지일 수 있음)
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        document.addEventListener('message', handleMessage as any); // RN Android 대응
+
+        return () => {
+            window.removeEventListener('message', handleMessage);
+            document.removeEventListener('message', handleMessage as any);
+        };
+    }, []);
+
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            try {
-                setStep('analyzing');
-                const base64 = await fileToGenerativePart(file);
-                setImageFileBase64(base64);
-                setImagePreview(`data:${file.type};base64,${base64}`);
-
-                const loc = await getCurrentLocation();
-                setLocation(loc);
-
-                const result = await analyzeFoodImage(base64, loc);
-                setAnalysisProgress(4);
-                await new Promise(resolve => setTimeout(resolve, 500));
-
-                setAnalysisResult(result);
-                setEditName(result.foodName);
-                setEditCalories(result.calories);
-                setMemo('');
-                setEditIngredients(result.ingredients || []);
-                setEditLocationName(result.locationName || '');
-
-                setStep('review');
-            } catch (err) {
-                setError('이미지를 분석하는 중 오류가 발생했습니다.');
-                setStep('capture');
-            }
-            // Reset input value to allow selecting same file again if needed
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                const base64String = reader.result as string;
+                const base64 = base64String.split(',')[1];
+                handleImageAnalysis(base64, file.type);
+            };
+            reader.readAsDataURL(file);
             e.target.value = '';
         }
     };
@@ -453,8 +488,8 @@ const MealEntry: React.FC<MealEntryProps> = ({
                         return (
                             <div key={index} className="flex items-center gap-4 group transition-all duration-300">
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-500 ${isCompleted
-                                        ? 'bg-blue-500 shadow-md shadow-blue-100'
-                                        : (isCurrent ? 'bg-white border-2 border-blue-500 shadow-lg' : 'bg-gray-50 border border-gray-100')
+                                    ? 'bg-blue-500 shadow-md shadow-blue-100'
+                                    : (isCurrent ? 'bg-white border-2 border-blue-500 shadow-lg' : 'bg-gray-50 border border-gray-100')
                                     }`}>
                                     {isCompleted ? (
                                         <Check size={16} className="text-white" strokeWidth={3} />
@@ -624,8 +659,8 @@ const MealEntry: React.FC<MealEntryProps> = ({
                                         <button
                                             onClick={() => setBabyReaction('good')}
                                             className={`flex-1 py-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${babyReaction === 'good'
-                                                    ? 'bg-green-500 text-white shadow-lg shadow-green-100'
-                                                    : 'bg-white text-gray-400 border border-gray-100 hover:bg-green-50'
+                                                ? 'bg-green-500 text-white shadow-lg shadow-green-100'
+                                                : 'bg-white text-gray-400 border border-gray-100 hover:bg-green-50'
                                                 }`}
                                         >
                                             <Smile size={28} strokeWidth={babyReaction === 'good' ? 2.5 : 1.5} />
@@ -634,8 +669,8 @@ const MealEntry: React.FC<MealEntryProps> = ({
                                         <button
                                             onClick={() => setBabyReaction('soso')}
                                             className={`flex-1 py-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${babyReaction === 'soso'
-                                                    ? 'bg-yellow-400 text-white shadow-lg shadow-yellow-100'
-                                                    : 'bg-white text-gray-400 border border-gray-100 hover:bg-yellow-50'
+                                                ? 'bg-yellow-400 text-white shadow-lg shadow-yellow-100'
+                                                : 'bg-white text-gray-400 border border-gray-100 hover:bg-yellow-50'
                                                 }`}
                                         >
                                             <Meh size={28} strokeWidth={babyReaction === 'soso' ? 2.5 : 1.5} />
@@ -644,8 +679,8 @@ const MealEntry: React.FC<MealEntryProps> = ({
                                         <button
                                             onClick={() => setBabyReaction('bad')}
                                             className={`flex-1 py-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${babyReaction === 'bad'
-                                                    ? 'bg-red-400 text-white shadow-lg shadow-red-100'
-                                                    : 'bg-white text-gray-400 border border-gray-100 hover:bg-red-50'
+                                                ? 'bg-red-400 text-white shadow-lg shadow-red-100'
+                                                : 'bg-white text-gray-400 border border-gray-100 hover:bg-red-50'
                                                 }`}
                                         >
                                             <Frown size={28} strokeWidth={babyReaction === 'bad' ? 2.5 : 1.5} />
@@ -773,8 +808,8 @@ const MealEntry: React.FC<MealEntryProps> = ({
                                     const isAllergic = babyProfiles[selectedBabyIndex]?.allergies?.some(allergy => ing.includes(allergy) || allergy.includes(ing));
                                     return (
                                         <span key={i} className={`px-2.5 py-1 text-xs rounded-lg font-medium flex items-center gap-1 ${isAllergic
-                                                ? 'bg-red-100 text-red-600 border border-red-200'
-                                                : 'bg-gray-100 text-gray-600'
+                                            ? 'bg-red-100 text-red-600 border border-red-200'
+                                            : 'bg-gray-100 text-gray-600'
                                             }`}>
                                             {isAllergic && <AlertTriangle size={10} />}
                                             #{ing}
@@ -840,8 +875,8 @@ const MealEntry: React.FC<MealEntryProps> = ({
                                         <button
                                             onClick={() => setBabyReaction('good')}
                                             className={`flex-1 py-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${babyReaction === 'good'
-                                                    ? 'bg-green-500 text-white shadow-lg shadow-green-100'
-                                                    : 'bg-white text-gray-400 border border-gray-100 hover:bg-green-50'
+                                                ? 'bg-green-500 text-white shadow-lg shadow-green-100'
+                                                : 'bg-white text-gray-400 border border-gray-100 hover:bg-green-50'
                                                 }`}
                                         >
                                             <Smile size={28} strokeWidth={babyReaction === 'good' ? 2.5 : 1.5} />
@@ -850,8 +885,8 @@ const MealEntry: React.FC<MealEntryProps> = ({
                                         <button
                                             onClick={() => setBabyReaction('soso')}
                                             className={`flex-1 py-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${babyReaction === 'soso'
-                                                    ? 'bg-yellow-400 text-white shadow-lg shadow-yellow-100'
-                                                    : 'bg-white text-gray-400 border border-gray-100 hover:bg-yellow-50'
+                                                ? 'bg-yellow-400 text-white shadow-lg shadow-yellow-100'
+                                                : 'bg-white text-gray-400 border border-gray-100 hover:bg-yellow-50'
                                                 }`}
                                         >
                                             <Meh size={28} strokeWidth={babyReaction === 'soso' ? 2.5 : 1.5} />
@@ -860,8 +895,8 @@ const MealEntry: React.FC<MealEntryProps> = ({
                                         <button
                                             onClick={() => setBabyReaction('bad')}
                                             className={`flex-1 py-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${babyReaction === 'bad'
-                                                    ? 'bg-red-400 text-white shadow-lg shadow-red-100'
-                                                    : 'bg-white text-gray-400 border border-gray-100 hover:bg-red-50'
+                                                ? 'bg-red-400 text-white shadow-lg shadow-red-100'
+                                                : 'bg-white text-gray-400 border border-gray-100 hover:bg-red-50'
                                                 }`}
                                         >
                                             <Frown size={28} strokeWidth={babyReaction === 'bad' ? 2.5 : 1.5} />

@@ -30,7 +30,7 @@ interface AIAnalysisResult extends NutritionInfo {
 export const analyzeFoodImage = async (base64Image: string, location?: { latitude: number; longitude: number }): Promise<AIAnalysisResult> => {
   // Always use the named parameter for API Key initialization
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  
+
   const isLocationEnabled = !!location;
 
   // Maps grounding is only supported in Gemini 2.5 series models.
@@ -82,8 +82,8 @@ export const analyzeFoodImage = async (base64Image: string, location?: { latitud
       protein: { type: Type.NUMBER },
       fat: { type: Type.NUMBER },
       description: { type: Type.STRING },
-      ingredientDetails: { 
-        type: Type.ARRAY, 
+      ingredientDetails: {
+        type: Type.ARRAY,
         items: {
           type: Type.OBJECT,
           properties: {
@@ -108,14 +108,14 @@ export const analyzeFoodImage = async (base64Image: string, location?: { latitud
 
   // Only use JSON mode if NOT using Maps tool (Maps tool + JSON mode is unsupported)
   if (!isLocationEnabled) {
-      requestConfig.responseMimeType = "application/json";
-      requestConfig.responseSchema = schema;
+    requestConfig.responseMimeType = "application/json";
+    requestConfig.responseSchema = schema;
   }
 
   try {
     // Model selection based on feature availability: Maps grounding requires 2.5 series.
     const response = await ai.models.generateContent({
-      model: isLocationEnabled ? 'gemini-2.5-flash' : 'gemini-3-flash-preview',
+      model: 'gemini-1.5-flash',
       contents: {
         parts: [
           {
@@ -133,18 +133,18 @@ export const analyzeFoodImage = async (base64Image: string, location?: { latitud
     // Access text property directly from the response object
     let jsonText = response.text;
     if (!jsonText) throw new Error("No response from AI");
-    
+
     // Clean up markdown code blocks if present
     jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
-    
+
     const data = JSON.parse(jsonText);
-    
+
     // Map ingredientDetails to simple ingredients array for backward compatibility
     const ingredients = data.ingredientDetails?.map((d: any) => d.name) || [];
 
     return {
-        ...data,
-        ingredients
+      ...data,
+      ingredients
     } as AIAnalysisResult;
 
   } catch (error) {
@@ -166,7 +166,7 @@ export const analyzeFoodImage = async (base64Image: string, location?: { latitud
 export const recalculateNutrition = async (base64Image: string, ingredients: string[]): Promise<NutritionInfo> => {
   // Always use the named parameter for API Key initialization
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  
+
   const prompt = `
     Analyze this food image again, focusing specifically on these ingredients provided by the user: ${ingredients.join(', ')}.
     
@@ -189,7 +189,7 @@ export const recalculateNutrition = async (base64Image: string, ingredients: str
   try {
     // Using gemini-3-flash-preview for specialized multimodal analysis tasks
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-1.5-flash',
       contents: {
         parts: [
           {
@@ -210,16 +210,16 @@ export const recalculateNutrition = async (base64Image: string, ingredients: str
     // Access text property directly from the response object
     let jsonText = response.text;
     if (!jsonText) throw new Error("No response from AI");
-    
+
     jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
-    
+
     const data = JSON.parse(jsonText);
-    
+
     return {
-        calories: data.calories || 0,
-        carbs: data.carbs || 0,
-        protein: data.protein || 0,
-        fat: data.fat || 0
+      calories: data.calories || 0,
+      carbs: data.carbs || 0,
+      protein: data.protein || 0,
+      fat: data.fat || 0
     };
 
   } catch (error) {
