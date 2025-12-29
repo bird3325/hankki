@@ -3,6 +3,7 @@ declare global {
         ReactNativeWebView?: {
             postMessage: (message: string) => void;
         };
+        receiveImageFromApp?: (base64Image: string) => void;
     }
 }
 
@@ -107,7 +108,7 @@ const MealEntry: React.FC<MealEntryProps> = ({
         });
     };
 
-    const handleImageAnalysis = async (base64: string, type: string = 'image/jpeg') => {
+    const handleImageAnalysis = React.useCallback(async (base64: string, type: string = 'image/jpeg') => {
         try {
             setStep('analyzing');
             setError(null);
@@ -134,32 +135,40 @@ const MealEntry: React.FC<MealEntryProps> = ({
             setError('이미지를 분석하는 중 오류가 발생했습니다.');
             setStep('capture');
         }
-    };
+    }, [analyzeFoodImage, getCurrentLocation]);
 
     useEffect(() => {
+        // React Native 앱으로부터 Base64 이미지 데이터를 수신하는 전역 함수 등록
+        window.receiveImageFromApp = (base64Image: string) => {
+            try {
+                console.log("React Native 앱으로부터 이미지를 성공적으로 받았습니다.");
+                handleImageAnalysis(base64Image);
+            } catch (e) {
+                console.error("receiveImageFromApp 함수 실행 중 오류 발생:", e);
+            }
+        };
+
         const handleMessage = (event: MessageEvent) => {
             try {
-                // event.data가 문자열일 수도 있고 객체일 수도 있으므로 확인
                 const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-
                 if (data && (data.type === 'image' || data.type === 'camera' || data.type === 'album')) {
                     if (data.base64) {
                         handleImageAnalysis(data.base64, data.mimeType || 'image/jpeg');
                     }
                 }
-            } catch (e) {
-                // JSON 파싱 에러 등은 무시 (다른 메시지일 수 있음)
-            }
+            } catch (e) { }
         };
 
         window.addEventListener('message', handleMessage);
-        document.addEventListener('message', handleMessage as any); // RN Android 대응
+        document.addEventListener('message', handleMessage as any);
 
         return () => {
             window.removeEventListener('message', handleMessage);
             document.removeEventListener('message', handleMessage as any);
+            // 언마운트 시 전역 함수 정리
+            delete window.receiveImageFromApp;
         };
-    }, []);
+    }, [handleImageAnalysis]);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
