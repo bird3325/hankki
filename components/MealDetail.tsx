@@ -121,7 +121,7 @@ const IngredientsEdit = ({ ingredients, ingredientDetails, onSave }: any) => {
             {ingredients && ingredients.length > 0 ? ingredients.map((ing: string, i: number) => {
                 const isAIAnalyzed = ingredientDetails?.some((d: any) => d.name === ing);
                 return (
-                    <span key={i} className={`px-3 py-1 text-sm rounded-full border ${isAIAnalyzed
+                    <span key={i} className={`px-3 py-1 text-[13px] rounded-full border ${isAIAnalyzed
                         ? 'bg-brand-50 text-brand-700 border-brand-100'
                         : 'bg-amber-50 text-amber-700 border-amber-200'
                         }`}>
@@ -239,7 +239,7 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, templates, currentUserId,
                     <ArrowLeft size={24} className="text-gray-700" />
                 </button>
 
-                <h1 className="text-lg font-bold text-gray-800">식단 상세</h1>
+                <h1 className="text-[18px] font-bold text-gray-800">식단 상세</h1>
 
                 <div className="flex gap-1">
                     {meal.isBabyFood && (
@@ -284,13 +284,13 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, templates, currentUserId,
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-6 pt-20">
                         <div className="flex items-center gap-2 mb-2">
                             {!isOwner && (
-                                <span className="bg-white/20 backdrop-blur-md text-white px-2 py-0.5 rounded-md text-xs font-black flex items-center gap-1">
+                                <span className="bg-white/20 backdrop-blur-md text-white px-2 py-0.5 rounded-md text-[11px] font-black flex items-center gap-1">
                                     <User size={12} fill="currentColor" /> {meal.userName}
                                 </span>
                             )}
                             <span
                                 onClick={handleTypeCycle}
-                                className={`px-2 py-0.5 rounded-md text-xs font-bold uppercase ${meal.isBabyFood
+                                className={`px-2 py-0.5 rounded-md text-[11px] font-bold uppercase ${meal.isBabyFood
                                     ? 'bg-indigo-500 text-white'
                                     : 'bg-brand-500 text-white'
                                     } ${isOwner ? 'cursor-pointer select-none' : ''}`}
@@ -298,13 +298,13 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, templates, currentUserId,
                                 {MEAL_TYPE_LABELS[meal.type] || meal.type}
                             </span>
                             {isOwner && meal.sharingLevel !== 'private' && (
-                                <span className="bg-white/20 backdrop-blur-sm text-white px-2 py-0.5 rounded-md text-xs flex items-center gap-1">
+                                <span className="bg-white/20 backdrop-blur-sm text-white px-2 py-0.5 rounded-md text-[11px] flex items-center gap-1">
                                     <CheckCircle2 size={12} /> {getSharingLevelLabel(meal.sharingLevel || 'public')}
                                 </span>
                             )}
                         </div>
 
-                        <div className="text-3xl font-bold text-white mb-1">
+                        <div className="text-[28px] font-bold text-white mb-1">
                             {isOwner ? (
                                 <InlineInput
                                     value={meal.foodName}
@@ -318,7 +318,7 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, templates, currentUserId,
                             )}
                         </div>
 
-                        <div className="flex items-center gap-4 text-white/90 text-sm mt-2">
+                        <div className="flex items-center gap-4 text-white/90 text-[13px] mt-2">
                             <div className="flex items-center gap-1">
                                 <Heart size={16} className={meal.likes.includes(currentUserId) ? 'fill-red-500 text-red-500' : ''} />
                                 <span>{meal.likes.length}</span>
@@ -332,7 +332,7 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, templates, currentUserId,
                 </div>
 
                 <div className="px-6 py-6 space-y-8">
-                    <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-sm text-gray-500">
+                    <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-[13px] text-gray-500">
                         <div className="flex items-center gap-2">
                             <Calendar size={16} />
                             <span>{new Date(meal.timestamp).toLocaleDateString()}</span>
@@ -367,7 +367,7 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, templates, currentUserId,
 
                     <div>
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-bold text-gray-800 text-lg">영양 분석 리포트</h3>
+                            <h3 className="font-bold text-gray-800 text-[18px]">영양 분석 리포트</h3>
                             {!canSeeDetails && <span className="text-[10px] text-gray-400 font-bold bg-gray-100 px-2 py-1 rounded-md flex items-center gap-1"><Lock size={10} /> 비공개</span>}
                         </div>
                         <div className="grid grid-cols-2 gap-3 mb-3">
@@ -376,10 +376,10 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, templates, currentUserId,
                                     <div className="w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center text-white">
                                         <Sparkles size={14} />
                                     </div>
-                                    <span className="text-brand-900 font-bold">오늘의 총 칼로리</span>
+                                    <span className="text-brand-900 font-bold text-[13px]">오늘의 총 칼로리</span>
                                 </div>
                                 {canSeeDetails ? (
-                                    <span className="text-3xl font-black text-brand-600">{meal.nutrition.calories} <span className="text-sm font-bold text-brand-400">kcal</span></span>
+                                    <span className="text-[28px] font-black text-brand-600">{meal.nutrition.calories} <span className="text-[14px] font-bold text-brand-400">kcal</span></span>
                                 ) : (
                                     <span className="text-lg font-bold text-gray-400 italic">비공개 설정됨</span>
                                 )}
@@ -388,16 +388,16 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, templates, currentUserId,
                         </div>
                         <div className="grid grid-cols-3 gap-3 relative">
                             <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-center">
-                                <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">탄수화물</div>
-                                <div className="font-black text-gray-800 text-lg">{canSeeDetails ? `${meal.nutrition.carbs}g` : '-'}</div>
+                                <div className="text-[11px] text-gray-400 font-bold uppercase mb-1">탄수화물</div>
+                                <div className="font-black text-gray-800 text-[18px]">{canSeeDetails ? `${meal.nutrition.carbs}g` : '-'}</div>
                             </div>
                             <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-center">
-                                <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">단백질</div>
-                                <div className="font-black text-gray-800 text-lg">{canSeeDetails ? `${meal.nutrition.protein}g` : '-'}</div>
+                                <div className="text-[11px] text-gray-400 font-bold uppercase mb-1">단백질</div>
+                                <div className="font-black text-gray-800 text-[18px]">{canSeeDetails ? `${meal.nutrition.protein}g` : '-'}</div>
                             </div>
                             <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-center">
-                                <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">지방</div>
-                                <div className="font-black text-gray-800 text-lg">{canSeeDetails ? `${meal.nutrition.fat}g` : '-'}</div>
+                                <div className="text-[11px] text-gray-400 font-bold uppercase mb-1">지방</div>
+                                <div className="font-black text-gray-800 text-[18px]">{canSeeDetails ? `${meal.nutrition.fat}g` : '-'}</div>
                             </div>
                             {!canSeeDetails && <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] rounded-2xl"></div>}
                         </div>
@@ -410,7 +410,7 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, templates, currentUserId,
                             </div>
                             <div>
                                 <h4 className="font-bold text-blue-800 text-[16px] mb-1">한끼 AI의 맞춤형 팁</h4>
-                                <p className="text-blue-700 text-[15px] leading-relaxed">
+                                <p className="text-blue-700 text-[14px] leading-relaxed">
                                     {meal.aiTip}
                                 </p>
                             </div>
@@ -425,7 +425,7 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, templates, currentUserId,
 
                         {meal.aiDescription && canSeeDetails && (
                             <div className="bg-gray-50 p-5 rounded-[24px] border border-gray-100 mb-2">
-                                <p className="text-gray-600 text-[15px] leading-relaxed">
+                                <p className="text-gray-600 text-[14px] leading-relaxed">
                                     {meal.aiDescription}
                                 </p>
                             </div>
@@ -437,7 +437,7 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, templates, currentUserId,
                                     {meal.ingredientDetails.map((detail, idx) => (
                                         <div key={idx} className="flex flex-col bg-white p-4 rounded-[20px] border border-gray-100 shadow-sm gap-2">
                                             <div className="flex items-center justify-between gap-2">
-                                                <span className="font-bold text-gray-800 text-sm break-words flex-1 min-w-0">{detail.name}</span>
+                                                <span className="font-bold text-gray-800 text-[14px] break-words flex-1 min-w-0">{detail.name}</span>
                                                 <span className="text-[11px] font-black text-brand-600 bg-brand-50 px-2 py-1 rounded-lg text-right break-keep">
                                                     {detail.nutritionEstimate}
                                                 </span>
@@ -489,7 +489,7 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, templates, currentUserId,
                         <div className="bg-indigo-50/50 p-5 rounded-[28px] border border-indigo-100 shadow-sm">
                             <div className="flex items-center gap-2 mb-4">
                                 <Baby size={18} className="text-indigo-500" />
-                                <h3 className="font-bold text-indigo-900 text-sm">오늘의 이유식 반응</h3>
+                                <h3 className="font-bold text-indigo-900 text-[14px]">오늘의 이유식 반응</h3>
                             </div>
                             <div className="flex gap-3">
                                 <button
@@ -540,10 +540,10 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, templates, currentUserId,
                                     value={meal.description}
                                     onSave={handleUpdateDescription}
                                     placeholder="오늘의 식사는 어땠나요? 맛이나 느낌을 기록해보세요."
-                                    className="text-gray-700 text-[15px] leading-relaxed"
+                                    className="text-gray-700 text-[14px] leading-relaxed"
                                 />
                             ) : (
-                                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-[15px]">
+                                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-[14px]">
                                     {meal.description || "작성된 메모가 없습니다."}
                                 </p>
                             )}
@@ -553,7 +553,7 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, templates, currentUserId,
                     {meal.comments.length > 0 && (
                         <div className="pt-6 border-t border-gray-100">
                             <div className="flex items-center justify-between mb-4 px-1">
-                                <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+                                <h3 className="font-bold text-gray-800 text-[14px] flex items-center gap-2">
                                     <MessageCircle size={16} className="text-gray-400" />
                                     응원 댓글 <span className="text-brand-500">{meal.comments.length}</span>
                                 </h3>
@@ -565,8 +565,8 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, templates, currentUserId,
                                             <img src={`https://picsum.photos/seed/${comment.userId}/100/100`} alt={comment.userName} className="w-full h-full object-cover" />
                                         </div>
                                         <div className="bg-gray-50 px-4 py-3 rounded-2xl rounded-tl-none flex-1">
-                                            <span className="font-extrabold text-gray-900 text-xs block mb-1">{comment.userName}</span>
-                                            <span className="text-gray-700 text-sm">{comment.text}</span>
+                                            <span className="font-extrabold text-gray-900 text-[11px] block mb-1">{comment.userName}</span>
+                                            <span className="text-gray-700 text-[13px]">{comment.text}</span>
                                         </div>
                                     </div>
                                 ))}

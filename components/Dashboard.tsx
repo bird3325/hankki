@@ -258,10 +258,10 @@ const Dashboard: React.FC<DashboardProps> = ({
   return (
     <div className="space-y-6 animate-[fadeIn_0.5s_ease-out] pb-6">
       <div>
-        <h2 className="text-[25px] font-bold text-gray-800">
+        <h2 className="text-[24px] font-bold text-gray-800">
           안녕하세요, <span className="text-brand-500">{userName}님!</span> 👋
         </h2>
-        <p className="text-gray-500 text-[15px] mt-1 font-medium">오늘도 건강한 한끼를 기록해보세요.</p>
+        <p className="text-gray-500 text-[14px] mt-1 font-medium">오늘도 건강한 한끼를 기록해보세요.</p>
       </div>
 
       <div className="relative group">
@@ -290,17 +290,17 @@ const Dashboard: React.FC<DashboardProps> = ({
               {adultFasting ? (
                 <>
                   <div className="relative z-10 flex items-baseline gap-2 mb-4">
-                    <span className="text-[49px] font-black tracking-tight text-gray-900">
-                      {adultFasting.hours}<span className="text-[21px] font-bold ml-1 opacity-40">h</span> {adultFasting.minutes}<span className="text-[21px] font-bold ml-1 opacity-40">m</span>
+                    <span className="text-[42px] font-black tracking-tight text-gray-900">
+                      {adultFasting.hours}<span className="text-[16px] font-bold ml-1 opacity-40">h</span> {adultFasting.minutes}<span className="text-[16px] font-bold ml-1 opacity-40">m</span>
                     </span>
                   </div>
-                  <p className="text-[15px] font-medium mb-6 text-gray-500">{adultFasting.message}</p>
+                  <p className="text-[14px] font-medium mb-6 text-gray-500">{adultFasting.message}</p>
                   <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden relative">
                     <div className="absolute top-0 left-0 h-full rounded-full bg-brand-500 transition-all duration-1000" style={{ width: `${adultFasting.progress}%` }}></div>
                   </div>
                 </>
               ) : (
-                <p className="text-gray-400 text-[15px] py-10 text-center">오늘 첫 식사를 기록하면<br />공복 시간이 계산됩니다.</p>
+                <p className="text-gray-400 text-[14px] py-10 text-center">오늘 첫 식사를 기록하면<br />공복 시간이 계산됩니다.</p>
               )}
             </div>
           </div>
@@ -328,17 +328,17 @@ const Dashboard: React.FC<DashboardProps> = ({
                   {babyFasting ? (
                     <>
                       <div className="relative z-10 flex items-baseline gap-2 mb-4">
-                        <span className="text-[49px] font-black tracking-tight text-white">
-                          {babyFasting.hours}<span className="text-[21px] font-bold ml-1 opacity-60">h</span> {babyFasting.minutes}<span className="text-[21px] font-bold ml-1 opacity-60">m</span>
+                        <span className="text-[42px] font-black tracking-tight text-white">
+                          {babyFasting.hours}<span className="text-[16px] font-bold ml-1 opacity-60">h</span> {babyFasting.minutes}<span className="text-[16px] font-bold ml-1 opacity-60">m</span>
                         </span>
                       </div>
-                      <p className="text-[15px] font-medium mb-6 text-indigo-100">{babyFasting.message}</p>
+                      <p className="text-[14px] font-medium mb-6 text-indigo-100">{babyFasting.message}</p>
                       <div className="w-full h-2.5 bg-white/20 rounded-full overflow-hidden relative">
                         <div className="absolute top-0 left-0 h-full rounded-full bg-white transition-all duration-1000" style={{ width: `${babyFasting.progress}%` }}></div>
                       </div>
                     </>
                   ) : (
-                    <p className="text-indigo-100/60 text-[15px] py-10 text-center">아이의 식단을 기록하면<br />이유식 간격이 표시됩니다.</p>
+                    <p className="text-indigo-100/60 text-[14px] py-10 text-center">아이의 식단을 기록하면<br />이유식 간격이 표시됩니다.</p>
                   )}
                 </div>
               </div>
@@ -378,12 +378,12 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
               <div className="flex items-end justify-between mb-4">
                 <div>
-                  <span className="text-[37px] font-black text-gray-900 tracking-tight">{totalCalories}</span>
-                  <span className="text-[19px] font-bold text-gray-400 ml-1">kcal</span>
+                  <span className="text-[32px] font-black text-gray-900 tracking-tight">{totalCalories}</span>
+                  <span className="text-[16px] font-bold text-gray-400 ml-1">kcal</span>
                 </div>
                 <div className="text-right">
                   <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Remaining</p>
-                  <p className="text-[19px] font-black text-brand-500">{remaining} kcal</p>
+                  <p className="text-[16px] font-black text-brand-500">{remaining} kcal</p>
                 </div>
               </div>
               <div className="w-full bg-gray-100 h-4 rounded-full overflow-hidden mb-2 p-1">
@@ -419,12 +419,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                   <div className="flex items-end justify-between mb-4">
                     <div>
-                      <span className="text-[37px] font-black text-indigo-900 tracking-tight">{specificBabyTotalCalories}</span>
-                      <span className="text-[19px] font-bold text-indigo-300 ml-1">kcal</span>
+                      <span className="text-[32px] font-black text-indigo-900 tracking-tight">{specificBabyTotalCalories}</span>
+                      <span className="text-[16px] font-bold text-indigo-300 ml-1">kcal</span>
                     </div>
                     <div className="text-right">
                       <p className="text-[11px] font-black text-indigo-300 uppercase tracking-widest mb-0.5">Today Total</p>
-                      <p className="text-[19px] font-black text-indigo-500">{specificBabyTodayMeals.length} 끼니</p>
+                      <p className="text-[16px] font-black text-indigo-500">{specificBabyTodayMeals.length} 끼니</p>
                     </div>
                   </div>
                   <div className="w-full bg-indigo-50 h-4 rounded-full overflow-hidden mb-2 p-1">
@@ -449,7 +449,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       <div>
         <div className="flex items-center justify-between mb-5 px-1">
-          <h3 className="text-[19px] font-bold text-gray-800">최근 기록</h3>
+          <h3 className="text-[18px] font-bold text-gray-800">최근 기록</h3>
         </div>
 
         {meals.length === 0 ? (
@@ -457,8 +457,8 @@ const Dashboard: React.FC<DashboardProps> = ({
             <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <Utensils className="text-brand-200" size={32} />
             </div>
-            <p className="text-gray-400 text-[15px] font-medium">아직 기록된 식단이 없습니다.</p>
-            <p className="text-brand-500 text-[15px] font-bold mt-2">오늘의 첫 끼를 기록해볼까요?</p>
+            <p className="text-gray-400 text-[14px] font-medium">아직 기록된 식단이 없습니다.</p>
+            <p className="text-brand-500 text-[14px] font-bold mt-2">오늘의 첫 끼를 기록해볼까요?</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -502,7 +502,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </span>
                       )}
                     </div>
-                    <h4 className="font-bold text-gray-800 text-[17px] truncate">{meal.foodName}</h4>
+                    <h4 className="font-bold text-gray-800 text-[16px] truncate">{meal.foodName}</h4>
                     <div className="flex items-center gap-3 mt-1.5">
                       <div className="flex items-center gap-1 text-[12px] font-bold text-gray-400">
                         <span className="text-brand-400">🔥</span>
@@ -529,7 +529,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       {/* 광고 삽입 공간 (Ad Section) - 히든 처리 */}
       <div className="hidden bg-white p-2 rounded-[32px] shadow-soft border border-gray-100 overflow-hidden min-h-[100px] flex items-center justify-center relative group cursor-pointer transition-all hover:shadow-md">
-        <div className="absolute top-2 right-4 text-[9px] font-bold text-gray-300 tracking-widest uppercase">AD</div>
+        <div className="absolute top-2 right-4 text-[10px] font-bold text-gray-300 tracking-widest uppercase">AD</div>
         <div className="w-full h-full bg-gray-50 rounded-[24px] flex flex-col items-center justify-center p-4 border border-dashed border-gray-200">
           <p className="text-gray-400 text-[13px] font-bold mb-1">맞춤 건강 식품 추천</p>
           <p className="text-gray-300 text-[11px]">추후 광고 내용이 삽입될 공간입니다.</p>
@@ -551,7 +551,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           </p>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
