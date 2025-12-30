@@ -272,7 +272,7 @@ const Settings: React.FC<SettingsProps> = ({
                 <Lock size={20} className="text-gray-400" />
                 <div>
                   <span className="text-[14px] text-gray-800 font-medium block">함께 칼로리 공유</span>
-                  <span className="text-[12px] text-gray-400">다른 사람에게 내 칼로리 표시</span>
+                  <span className="text-[12px] text-gray-400">다른 사람에게 공개</span>
                 </div>
               </div>
               <button
