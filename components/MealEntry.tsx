@@ -856,8 +856,8 @@ const MealEntry: React.FC<MealEntryProps> = ({
                                         <div key={idx} className="flex flex-col bg-gray-50 p-3 rounded-xl gap-1">
                                             <div className="flex items-center justify-between gap-2">
                                                 <span className="font-bold text-gray-800 text-sm flex-1 min-w-0 break-words">{detail.name}</span>
-                                                <span className="text-[10px] font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-lg shrink-0">
-                                                    {detail.nutritionEstimate.length > 10 ? detail.nutritionEstimate.slice(0, 10) + '...' : detail.nutritionEstimate}
+                                                <span className="text-[10px] font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-lg text-right break-keep">
+                                                    {detail.nutritionEstimate}
                                                 </span>
                                             </div>
                                             <p className="text-[13px] text-gray-500 break-words leading-relaxed">{detail.benefit}</p>

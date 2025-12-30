@@ -438,8 +438,8 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, templates, currentUserId,
                                         <div key={idx} className="flex flex-col bg-white p-4 rounded-[20px] border border-gray-100 shadow-sm gap-2">
                                             <div className="flex items-center justify-between gap-2">
                                                 <span className="font-bold text-gray-800 text-sm break-words flex-1 min-w-0">{detail.name}</span>
-                                                <span className="text-[11px] font-black text-brand-600 bg-brand-50 px-2 py-1 rounded-lg shrink-0">
-                                                    {detail.nutritionEstimate.length > 10 ? detail.nutritionEstimate.slice(0, 10) + '...' : detail.nutritionEstimate}
+                                                <span className="text-[11px] font-black text-brand-600 bg-brand-50 px-2 py-1 rounded-lg text-right break-keep">
+                                                    {detail.nutritionEstimate}
                                                 </span>
                                             </div>
                                             <p className="text-[14px] text-gray-500 leading-normal break-words">{detail.benefit}</p>
