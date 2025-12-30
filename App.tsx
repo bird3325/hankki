@@ -447,10 +447,17 @@ const App: React.FC = () => {
                 if (uploadedUrl) imageUrl = uploadedUrl;
             } catch (error) { console.error(error); }
         }
+
+        const API_BASE_URL = 'https://nonrefractive-carisa-snarlingly.ngrok-free.dev';
+
         try {
-            const { error } = await supabase
-                .from('meals')
-                .insert([{
+            // 기존 Supabase 직접 호출 대신 백엔드 API 호출로 변경
+            const response = await fetch(`${API_BASE_URL}/api/meals`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
                     user_id: user.id,
                     food_name: newMeal.foodName,
                     type: newMeal.type,
@@ -468,10 +475,18 @@ const App: React.FC = () => {
                     baby_id: newMeal.babyId,
                     baby_name: newMeal.babyName,
                     baby_reaction: newMeal.babyReaction
-                }]);
-            if (error) throw error;
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('API request failed');
+            }
+
+            // Supabase Realtime 구독이 되어있으므로 fetchMeals를 직접 호출할 필요는 없을 수 있으나,
+            // 즉각적인 UI 반응을 위해 호출하거나 Active Tab을 변경합니다.
             setActiveTab('diary');
         } catch (e: any) {
+            console.error(e);
             showAlert('저장 중 오류가 발생했습니다.');
         }
     };
