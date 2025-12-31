@@ -403,6 +403,81 @@ const App: React.FC = () => {
         return () => { supabase.removeChannel(channel); };
     }, [isAuthenticated, user.id, fetchMeals, fetchFamilyGroup, isMaintenanceMode]);
 
+    // 앱의 외부 브라우저에서 로그인 성공 후 결과를 처리하는 전역 함수
+    useEffect(() => {
+        // 전역 스코프에 handleGoogleLoginSuccess 함수 등록
+        (window as any).handleGoogleLoginSuccess = async function (authentication: any) {
+            console.log('앱으로부터 받은 인증 정보:', authentication);
+
+            try {
+                if (!authentication?.accessToken) {
+                    console.error('로그인에 성공했으나, accessToken을 찾을 수 없습니다.');
+                    showAlert('로그인 정보가 올바르지 않습니다. 다시 시도해주세요.');
+                    return;
+                }
+
+                // accessToken을 백엔드 서버로 보내서 서버 측 로그인을 완료하고,
+                // 서버로부터 최종적으로 앱에서 사용할 유저 정보를 받아옵니다.
+                const API_BASE_URL = 'https://nonrefractive-carisa-snarlingly.ngrok-free.dev';
+
+                const response = await fetch(`${API_BASE_URL}/api/v1/auth/google-login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        accessToken: authentication.accessToken
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('서버 로그인 처리 실패');
+                }
+
+                const userData = await response.json();
+                console.log('서버로부터 받은 유저 정보:', userData);
+
+                // 서버에서 받은 Supabase 세션 정보로 로그인 상태 업데이트
+                if (userData.session) {
+                    const { error } = await supabase.auth.setSession({
+                        access_token: userData.session.access_token,
+                        refresh_token: userData.session.refresh_token
+                    });
+
+                    if (error) {
+                        throw error;
+                    }
+
+                    // 로그인 성공 - Supabase auth state change가 자동으로 처리됨
+                    console.log('로그인 성공! 세션이 설정되었습니다.');
+                    showAlert('로그인 성공!');
+                } else if (userData.token || userData.user) {
+                    // 대체 처리: 토큰을 localStorage에 저장
+                    if (userData.token) {
+                        localStorage.setItem('auth_token', userData.token);
+                    }
+
+                    // 사용자 정보가 있으면 직접 로그인 처리
+                    if (userData.user) {
+                        // fetchUserProfile과 fetchMeals는 Supabase auth state change로 자동 처리됨
+                        // 따라서 여기서는 별도 처리 없이 앱이 자동으로 업데이트되도록 함
+                        console.log('사용자 정보를 받았습니다. 자동으로 로그인 처리됩니다.');
+                    }
+                } else {
+                    throw new Error('서버로부터 유효한 인증 정보를 받지 못했습니다.');
+                }
+            } catch (error: any) {
+                console.error('로그인 결과 처리 중 오류가 발생했습니다:', error);
+                showAlert(`로그인 처리 중 오류가 발생했습니다: ${error.message}`);
+            }
+        };
+
+        // 컴포넌트 언마운트 시 전역 함수 정리
+        return () => {
+            delete (window as any).handleGoogleLoginSuccess;
+        };
+    }, [showAlert]);
+
     const resetState = () => {
         setUser({ id: '', email: '', name: 'Guest', fullName: '', avatar: '', targetCalories: 2200, role: 'user', createdAt: new Date().toISOString() });
         setMeals([]);
