@@ -43,6 +43,25 @@ const Login: React.FC<LoginProps> = ({ onLogin, onSignupClick }) => {
         }
     }, []);
 
+    // 앱으로부터 카카오 인증 토큰을 받는 함수 등록
+    useEffect(() => {
+        // 앱으로부터 카카오 인증 토큰을 받는 함수
+        (window as any).handleKakaoLoginSuccess = function (token: string) {
+            console.log('앱으로부터 받은 카카오 토큰:', token);
+            // TODO: 이 토큰을 백엔드 서버로 보내 최종 로그인을 완료하세요.
+            // 예: fetch('/api/auth/kakao', { 
+            //   method: 'POST',
+            //   headers: { 'Content-Type': 'application/json' },
+            //   body: JSON.stringify({ token }) 
+            // });
+        };
+
+        // 컴포넌트 언마운트 시 정리
+        return () => {
+            delete (window as any).handleKakaoLoginSuccess;
+        };
+    }, []);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!email.trim() || !password) {
@@ -92,10 +111,14 @@ const Login: React.FC<LoginProps> = ({ onLogin, onSignupClick }) => {
     };
 
     const handleSocialLogin = async (provider: 'kakao' | 'google') => {
-        // Google 로그인 시 React Native WebView 환경인지 확인
-        if (provider === 'google' && (window as any).ReactNativeWebView) {
+        // React Native WebView 환경인지 확인
+        if ((window as any).ReactNativeWebView) {
             // React Native 앱 환경: 앱으로 메시지 전송
-            (window as any).ReactNativeWebView.postMessage('google_login');
+            if (provider === 'kakao') {
+                (window as any).ReactNativeWebView.postMessage('kakao_login');
+            } else if (provider === 'google') {
+                (window as any).ReactNativeWebView.postMessage('google_login');
+            }
             return;
         }
 
