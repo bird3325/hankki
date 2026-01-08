@@ -43,24 +43,27 @@ const Login: React.FC<LoginProps> = ({ onLogin, onSignupClick }) => {
         }
     }, []);
 
-    // 앱으로부터 카카오 인증 토큰을 받는 함수 등록
+    // 앱으로부터 인증 정보를 받는 함수 등록
     useEffect(() => {
-        // 앱으로부터 카카오 인증 토큰을 받는 함수
-        (window as any).handleKakaoLoginSuccess = function (token: string) {
-            console.log('앱으로부터 받은 카카오 토큰:', token);
-            // TODO: 이 토큰을 백엔드 서버로 보내 최종 로그인을 완료하세요.
-            // 예: fetch('/api/auth/kakao', { 
-            //   method: 'POST',
-            //   headers: { 'Content-Type': 'application/json' },
-            //   body: JSON.stringify({ token }) 
-            // });
+        (window as any).handleFlutterLoginSuccess = function (data: any) {
+            console.log('앱으로부터 받은 인증 정보:', data);
+
+            // Flutter에서 보낸 데이터(JSON 문자열 또는 객체)를 처리
+            const userData = typeof data === 'string' ? JSON.parse(data) : data;
+
+            // 로그인 상태 동기화 및 메인 화면으로 이동
+            onLogin({
+                id: userData.id || userData.email,
+                email: userData.email,
+                name: userData.displayName || userData.email?.split('@')[0],
+                photo_url: userData.photoUrl
+            });
         };
 
-        // 컴포넌트 언마운트 시 정리
         return () => {
-            delete (window as any).handleKakaoLoginSuccess;
+            delete (window as any).handleFlutterLoginSuccess;
         };
-    }, []);
+    }, [onLogin]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -111,6 +114,16 @@ const Login: React.FC<LoginProps> = ({ onLogin, onSignupClick }) => {
     };
 
     const handleSocialLogin = async (provider: 'kakao' | 'google') => {
+        // Flutter Webview 환경인지 확인
+        if ((window as any).Toaster) {
+            if (provider === 'kakao') {
+                (window as any).Toaster.postMessage('kakao_login');
+            } else if (provider === 'google') {
+                (window as any).Toaster.postMessage('google_login');
+            }
+            return;
+        }
+
         // React Native WebView 환경인지 확인
         if ((window as any).ReactNativeWebView) {
             // React Native 앱 환경: 앱으로 메시지 전송

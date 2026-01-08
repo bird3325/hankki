@@ -1,0 +1,27 @@
+name: hankki_mobile
+description: Hankki AI Meal Manager - Flutter Webview App
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  webview_flutter: ^4.4.2
+  webview_flutter_android: ^3.10.1
+  webview_flutter_wkwebview: ^3.9.1
+  kakao_flutter_sdk: ^1.9.0
+  google_sign_in: ^6.1.6
+  image_picker: ^1.0.7
+  flutter_secure_storage: ^9.0.0
+  http: ^1.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true

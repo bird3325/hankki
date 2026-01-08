@@ -3,6 +3,9 @@ declare global {
         ReactNativeWebView?: {
             postMessage: (message: string) => void;
         };
+        Toaster?: {
+            postMessage: (message: string) => void;
+        };
         receiveImageFromApp?: (base64Image: string) => void;
         receiveLocationFromApp?: (locationData: any) => void;
     }
@@ -342,26 +345,26 @@ const MealEntry: React.FC<MealEntryProps> = ({
 
     // '사진 촬영' 버튼 클릭 시 호출할 함수
     const requestCameraFromApp = () => {
-        // 앱의 웹뷰 환경인지 확인
-        if (window.ReactNativeWebView) {
-            // 'open_camera' 메시지를 앱으로 전송
+        console.log("requestCameraFromApp 호출됨. Toaster 존재 여부:", !!(window as any).Toaster);
+        // 앱의 웹뷰 환경인지 확인 (Flutter Webview 채널 'Toaster')
+        if ((window as any).Toaster) {
+            console.log("Toaster.postMessage('open_camera') 전송 시도");
+            (window as any).Toaster.postMessage('open_camera');
+        } else if (window.ReactNativeWebView) {
             window.ReactNativeWebView.postMessage('open_camera');
         } else {
-            // 웹뷰 환경이 아닐 경우 (예: 일반 PC 브라우저)
-            // 기존 웹 방식 병행 (사용자 편의를 위해 유지)
             cameraInputRef.current?.click();
         }
     };
 
     // '앨범에서 선택' 버튼 클릭 시 호출할 함수
     const requestAlbumFromApp = () => {
-        // 앱의 웹뷰 환경인지 확인
-        if (window.ReactNativeWebView) {
-            // 'open_album' 메시지를 앱으로 전송
+        // 앱의 웹뷰 환경인지 확인 (Flutter Webview 채널 'Toaster')
+        if ((window as any).Toaster) {
+            (window as any).Toaster.postMessage('open_album'); // 'open_album'으로 수정
+        } else if (window.ReactNativeWebView) {
             window.ReactNativeWebView.postMessage('open_album');
         } else {
-            // 웹뷰 환경이 아닐 경우
-            // 기존 웹 방식 병행 (사용자 편의를 위해 유지)
             albumInputRef.current?.click();
         }
     };

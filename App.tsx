@@ -405,6 +405,47 @@ const App: React.FC = () => {
 
     // 앱의 외부 브라우저에서 로그인 성공 후 결과를 처리하는 전역 함수
     useEffect(() => {
+        // Flutter 앱으로부터 인증 정보를 받는 함수
+        (window as any).handleFlutterLoginSuccess = async function (authData: any) {
+            console.log('Flutter로부터 받은 인증 정보:', authData);
+
+            try {
+                let sessionData = null;
+
+                // authData가 문자열로 올 경우를 대비해 파싱 시도
+                const parsedData = typeof authData === 'string' ? JSON.parse(authData) : authData;
+
+                if (parsedData.session) {
+                    sessionData = parsedData.session;
+                } else if (parsedData.access_token && parsedData.refresh_token) {
+                    sessionData = {
+                        access_token: parsedData.access_token,
+                        refresh_token: parsedData.refresh_token
+                    };
+                }
+
+                if (sessionData) {
+                    const { error } = await supabase.auth.setSession({
+                        access_token: sessionData.access_token,
+                        refresh_token: sessionData.refresh_token
+                    });
+
+                    if (error) throw error;
+                    console.log('Flutter 세션 설정 성공!');
+                    showAlert('로그인 성공!');
+                } else if (parsedData.accessToken) {
+                    // Google/Kakao 네이티브에서 받은 accessToken만 있는 경우, 서버를 통해 처리
+                    // Login.tsx에서 보던 handleGoogleLoginSuccess 로직과 유사하게 처리하거나 
+                    // 직접 supabase.auth.signInWithIdToken 등을 사용할 수 있음.
+                    // 여기서는 handleGoogleLoginSuccess를 재사용하거나 유사한 플로우를 탑니다.
+                    (window as any).handleGoogleLoginSuccess(parsedData);
+                }
+            } catch (error: any) {
+                console.error('Flutter 로그인 처리 중 오류:', error);
+                showAlert(`로그인 처리 중 오류: ${error.message}`);
+            }
+        };
+
         // 전역 스코프에 handleGoogleLoginSuccess 함수 등록
         (window as any).handleGoogleLoginSuccess = async function (authentication: any) {
             console.log('앱으로부터 받은 인증 정보:', authentication);
@@ -475,6 +516,7 @@ const App: React.FC = () => {
         // 컴포넌트 언마운트 시 전역 함수 정리
         return () => {
             delete (window as any).handleGoogleLoginSuccess;
+            delete (window as any).handleFlutterLoginSuccess;
         };
     }, [showAlert]);
 
